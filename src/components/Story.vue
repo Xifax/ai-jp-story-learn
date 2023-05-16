@@ -9,12 +9,9 @@ msg: {
 <script>
 // Global variables (meh)
 let openai;
-const prompt = `
-Create a simple ... story, no longer than N words. This story should include the following words: 
-`
-const examplesPrompt = `
-Create an example with idiomatic usage of 
-`
+const prompt = `Create a simple ... story, no longer than N words. 
+This story should include the following words: `
+const examplesPrompt = `Create an example with idiomatic usage of `
 
 import { Configuration, OpenAIApi } from 'openai'
 export default {
@@ -23,7 +20,7 @@ export default {
       // requiredWords: 'hollow, majesty, fanatic, precise, balderdash',
       requiredWords: '',
       story: '',
-      storyLength: 50,
+      storyLength: 100,
       words: [],
       lookupResults: [],
       multiLookupResults: [],
@@ -45,11 +42,9 @@ export default {
         messages: [{role: "user", content: query}],
       });
       console.log(completion.data.choices[0].message);
-      console.log(completion.data.choices[0].message);
 
       this.story = completion.data.choices[0].message.content
       this.words = completion.data.choices[0].message.content.split(" ")
-      console.log(this.words)
 
       this.loading = false
 
@@ -79,7 +74,6 @@ The elusive nature of the human psyche had finally revealed itself, and humanity
     },
     async getExample(word) {
       this.loading = true
-      console.log(word)
 
       // Sanitize word
       word = word.replace(/[^\w\s]|_/g, '');
@@ -90,7 +84,6 @@ The elusive nature of the human psyche had finally revealed itself, and humanity
         model: "gpt-3.5-turbo",
         messages: [{role: "user", content: query}],
       });
-      console.log(completion.data.choices[0].message);
       console.log(completion.data.choices[0].message);
 
       this.loading = false
@@ -198,6 +191,7 @@ The elusive nature of the human psyche had finally revealed itself, and humanity
       </div>
 
       <!-- Right side  -->
+      <!-- TODO: just append more items to the list -->
       <div class="column">
 
         <div class="content">
