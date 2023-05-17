@@ -1,9 +1,9 @@
 <script setup>
-import Story from '../components/Story.vue'
+import StoryJP from '../components/StoryJP.vue'
 </script>
 
 <template>
   <main>
-    <Story />
+    <StoryJP />
   </main>
 </template>

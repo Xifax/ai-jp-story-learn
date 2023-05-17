@@ -1,37 +1,62 @@
 <script setup>
-defineProps({
-msg: {
-  type: String,
-  required: true
-  }})
+defineProps({})
 </script>
 
 <script>
 // Global variables (meh)
 let openai;
-const prompt = `Create a simple ... story, no longer than N words. 
-This story should include the following words: `
-const examplesPrompt = `Create an example with idiomatic usage of `
+const prompt = `簡単なストーリーを作成してください。ストーリージャンルは...であるべきです。
+N単語以内でお願いします。このストーリーには以下の単語を含める必要があります：`
+const examplesPrompt = ` という慣用表現を使った例を作成してください。`
 
 import { Configuration, OpenAIApi } from 'openai'
+// import { isKanji, stripOkurigana } from 'wanakana'
+import Kuroshiro from 'kuroshiro'
+import * as lindera from 'lindera-js'
 export default {
   data() {
     return {
       // requiredWords: 'hollow, majesty, fanatic, precise, balderdash',
       requiredWords: '',
       story: '',
-      storyLength: 100,
+      storyLength: 50,
       words: [],
       lookupResults: [],
       multiLookupResults: [],
+      // TODO: implement list
+      lookupsList: [],
       loading: false,
-      storyType: 'Sci-Fi',
-      types: ['Sci-Fi', 'magical realism', 'parallel world', 'romantic', 'fable']
+      storyType: 'サイエンスフィクション',
+      types: ['サイエンスフィクション', 'マジックリアリズム', '異世界', '綺談', '寓話']
     }
   },
   methods: {
+    isLink(word) {
+      // return isKanji(stripOkurigana(word))
+      return Kuroshiro.Util.hasKanji(word)
+    },
+    checkPaste(event) {
+      // let data = event.clipboardData.getData('text/plain')
+      // console.log(data)
+      // data = data.replaceAll("\n", ", ");
+      // console.log(data)
+      // this.requiredWords = data
+    },
+    async tokenize(text) {
+      let words = []
+      let tokens = lindera.tokenize(text)
+      for (let token of tokens) {
+        // console.log(token)
+        words.push(token.surface_form)
+      }
+      return words
+    },
     async newStory() {
       this.loading = true
+
+      if (this.requiredWords.includes("\n")) {
+        this.requiredWords = this.requiredWords.replaceAll("\n", ", ");
+      }
       let query = prompt + this.requiredWords
       query = query.replace("...", this.storyType)
       query = query.replace("N", this.storyLength)
@@ -44,41 +69,25 @@ export default {
       console.log(completion.data.choices[0].message);
 
       this.story = completion.data.choices[0].message.content
-      this.words = completion.data.choices[0].message.content.split(" ")
+      this.words = await this.tokenize(completion.data.choices[0].message.content)
 
       this.loading = false
 
       /*
       // TODO: simulate answer
       this.story = `
-In the year 3050, humanity had reached an era of great technological advancement. The world's leading scientists were on the brink of discovering the secret to achieve ataraxia, a state of complete tranquility and calmness.
-
-The preamble to this discovery began with the brilliant minds of Dr. Ava and her assistant, Ryan. They were determined to uncover the elusive secrets hidden in the human mind and bring forth a new age of wonder.
-
-Through countless experiments and long hours in the lab, they finally unlocked the key to achieve ataraxia. They created a device that could stimulate the human brain and induce a state of complete calmness and serenity.
-
-The people of the world were awed by this new wonder, and many sought to achieve this state of being. The ataraxia craze took over, and people began to use the device to achieve a peaceful existence.
-
-However, little did they know that the elusive nature of the human mind could not be contained or controlled. The device began to malfunction, causing people to become stuck in a state of ataraxia forever.
-
-Dr. Ava and Ryan were devastated as they realized the grave error in their discovery. They scrambled to recall all the devices and find a way to reverse the impact on those affected.
-
-The world was thrown into chaos, and the once sought-after ataraxia became a cautionary tale of the dangers of playing with the human mind.
-
-The elusive nature of the human psyche had finally revealed itself, and humanity was left to wonder if they would ever truly understand the complexities of their own existence.
+物語の始まりは、宇宙に浮かぶ巨大な宇宙ステーション内部でのことでした。そこでは、様々な研究が行われ、新しい発見が 日々されていました。
+ある日、ステーション内の科学者の一人が、宇宙からの信号を受信しました。信号は人工的なもので、翻訳すると「助けてく れ」という内容でした。
+科学者たちは、その信号の発信元を特定し、宇宙船を発進させることに決めました。宇宙船には、科学者た科学者たちは、その信号の発信元を特定し、宇宙船を発進させることに決めました。
 `
-
-      // TODO: sanitize separate words
-      this.words = this.story.split(" ")
+      this.words = await this.tokenize(this.story)
+      this.loading = false;
       */
     },
     async getExample(word) {
       this.loading = true
 
-      // Sanitize word
-      word = word.replace(/[^\w\s]|_/g, '');
-
-      let query = examplesPrompt + `"${word}"`
+      let query = `「${word}」` + examplesPrompt
       console.log("Using prompt: " + query)
       const completion = await openai.createChatCompletion({
         model: "gpt-3.5-turbo",
@@ -88,12 +97,13 @@ The elusive nature of the human psyche had finally revealed itself, and humanity
 
       this.loading = false
 
-      return completion.data.choices[0].message.content.split(" ")
+      return this.tokenize(completion.data.choices[0].message.content)
     },
     // Generate idiomatic examples OR
     // TODO: story continuation
     async lookup(word) {
       this.lookupResults = await this.getExample(word)
+      // this.lookupList.push(await this.getExample(word))
       // this.lookupResults = ["This", "is", "first", "level"]
     },
     async multiLookup(word) {
@@ -111,7 +121,7 @@ The elusive nature of the human psyche had finally revealed itself, and humanity
 
     // Assets
     let text;
-    fetch('./20k.txt')
+    fetch('./44k_pruned.txt')
       .then(response => response.text())
       .then(data => {
         text = data
@@ -149,29 +159,29 @@ The elusive nature of the human psyche had finally revealed itself, and humanity
         <h3>
         </h3>
         <!-- Filled manually or pre-populated -->
-        <label class="label">Required Words</label>
-        <textarea class="textarea" type="text" v-model="requiredWords" 
-          placeholder="AI will use those words in its story." />
+        <label class="label">必要な単語</label>
+        <textarea class="textarea" type="text" v-model="requiredWords"
+          placeholder="AIは、その言葉をストーリーの中で使っていきます。" />
         <br>
 
         <div class="field is-grouped">
 
         <div class="control">
           <div class="select">
-            <select v-model="storyType" >
-              <option disabled value="">Choose your story</option>
+            <select v-model="storyType">
+              <option disabled value="">ジャンルを選択してください</option>
               <option v-for="option in types" :value="option">{{option}}</option>
             </select>
           </div>
         </div>
 
-        <div class="control" style="width: 20%" >
+        <div class="control" style="width: 20%">
           <input v-model="storyLength"
               class="input" type="number" min="50" max="150"
               placeholder="Story length">
         </div>
 
-        <button class="button is-danger is-light" @click="newStory">New Story</button>
+        <button class="button is-danger is-light" @click="newStory">新しい物語</button>
 
         </div>
 
@@ -179,11 +189,12 @@ The elusive nature of the human psyche had finally revealed itself, and humanity
         <div style="max-width: 600px; display: none;">{{ story }}</div>
 
         <!-- Iterate over all words -->
-        <div class="content">
+        <div class="content text">
           <div style="max-width: 600px">
-            <span @click="lookup(word)" v-for="word in words" :key="word">
+            <span v-for="word in words" :key="word">
 
-              <a href="javascript: void(0);">{{ word }}</a>&nbsp;
+              <a v-if="isLink(word)" @click="lookup(word)" href="javascript: void(0);">{{ word }}</a>
+              <span v-else>{{ word }}</span>
 
             </span>
           </div>
@@ -196,9 +207,10 @@ The elusive nature of the human psyche had finally revealed itself, and humanity
 
         <div class="content">
           <div style="max-width: 600px">
-            <span @click="multiLookup(word)" v-for="word in lookupResults" :key="word">
+            <span v-for="word in lookupResults" :key="word">
 
-              <a href="javascript: void(0);">{{ word }}</a>&nbsp;
+              <a v-if="isLink(word)" @click="multiLookup(word)" href="javascript: void(0);">{{ word }}</a>
+              <span v-else>{{ word }}</span>
 
             </span>
           </div>
@@ -208,9 +220,10 @@ The elusive nature of the human psyche had finally revealed itself, and humanity
 
         <div class="content">
           <div style="max-width: 600px">
-            <span @click="lookup(word)" v-for="word in multiLookupResults" :key="word">
+            <span v-for="word in multiLookupResults" :key="word">
 
-              <a href="javascript: void(0);">{{ word }}</a>&nbsp;
+              <a v-if="isLink(word)" @click="lookup(word)" href="javascript: void(0);">{{ word }}</a>
+              <span v-else>{{ word }}</span>
 
             </span>
           </div>
@@ -228,6 +241,16 @@ The elusive nature of the human psyche had finally revealed itself, and humanity
 </template>
 
 <style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Kaisei+HarunoUmi:wght@400;500;700&display=swap');
+* {
+  font-family: 'Kaisei HarunoUmi', serif;
+}
+span {
+  font-size: 1.1em;
+}
+.text {
+  font-size: 1.12em;
+}
 a,
 .green {
   text-decoration: none;
