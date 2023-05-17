@@ -154,13 +154,13 @@ export default {
 
 
       <!-- Left side  -->
-      <div class="column">
+      <div class="column is-two-thirds">
         <h1 class="green">{{ msg }}</h1>
         <h3>
         </h3>
         <!-- Filled manually or pre-populated -->
         <label class="label">必要な単語</label>
-        <textarea class="textarea" type="text" v-model="requiredWords"
+        <textarea class="textarea" type="text" v-model="requiredWords" rows="2"
           placeholder="AIは、その言葉をストーリーの中で使っていきます。" />
         <br>
 
