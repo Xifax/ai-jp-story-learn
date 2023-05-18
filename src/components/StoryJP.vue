@@ -7,7 +7,7 @@ defineProps({})
 let openai;
 const prompt = `簡単なストーリーを作成してください。ストーリージャンルは...であるべきです。
 N単語以内でお願いします。このストーリーには以下の単語を含める必要があります：`
-const examplesPrompt = ` という慣用表現を使った例を作成してください。`
+const examplesPrompt = `という慣用表現を使った例を作成してください。`
 
 import { Configuration, OpenAIApi } from 'openai'
 // import { isKanji, stripOkurigana } from 'wanakana'
@@ -23,6 +23,7 @@ export default {
       words: [],
       lookupResults: [],
       multiLookupResults: [],
+      breadcrumbs: [],
       // TODO: implement list
       lookupsList: [],
       loading: false,
@@ -46,12 +47,14 @@ export default {
       let words = []
       let tokens = lindera.tokenize(text)
       for (let token of tokens) {
-        // console.log(token)
         words.push(token.surface_form)
       }
+      console.log(words)
       return words
     },
     async newStory() {
+      this.words = []
+      this.story = ''
       this.loading = true
 
       if (this.requiredWords.includes("\n")) {
@@ -69,7 +72,7 @@ export default {
       console.log(completion.data.choices[0].message);
 
       this.story = completion.data.choices[0].message.content
-      this.words = await this.tokenize(completion.data.choices[0].message.content)
+      this.words = await this.tokenize(this.story)
 
       this.loading = false
 
@@ -97,18 +100,21 @@ export default {
 
       this.loading = false
 
-      return this.tokenize(completion.data.choices[0].message.content)
+      let words = await this.tokenize(completion.data.choices[0].message.content)
+      return words
     },
     // Generate idiomatic examples OR
     // TODO: story continuation
     async lookup(word) {
+      this.lookupResults = []
       this.lookupResults = await this.getExample(word)
       // this.lookupList.push(await this.getExample(word))
-      // this.lookupResults = ["This", "is", "first", "level"]
+      this.breadcrumbs.push(word)
     },
     async multiLookup(word) {
+      this.multiLookupResults = []
       this.multiLookupResults = await this.getExample(word)
-      // this.multiLookupResults = ["This", "is", "second", "lookup", "level"]
+      this.breadcrumbs.push(word)
     }
   },
   created() {
@@ -142,6 +148,8 @@ export default {
         this.requiredWords = words.join(", ")
       })
 
+    this.storyType = this.types[Math.floor(Math.random() * this.types.length)]
+
     console.log("Ready to rumble!")
   }
 }
@@ -152,12 +160,18 @@ export default {
 
     <div class="columns box">
 
-
       <!-- Left side  -->
       <div class="column is-two-thirds">
-        <h1 class="green">{{ msg }}</h1>
-        <h3>
-        </h3>
+
+        <nav v-if="breadcrumbs.length > 0" 
+          class="is-small breadcrumb has-succeeds-separator" aria-label="breadcrumbs">
+          <ul>
+            <li v-for="breadcrumb in breadcrumbs" :key="breadcrumb">
+              <a @click="lookup(breadcrumb)" href="#">{{ breadcrumb }}
+            </a></li>
+          </ul>
+        </nav>
+
         <!-- Filled manually or pre-populated -->
         <label class="label">必要な単語</label>
         <textarea class="textarea" type="text" v-model="requiredWords" rows="2"
