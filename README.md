@@ -1,4 +1,4 @@
-# ai-story-learn
+# ai-jp-story-learn
 
 ![demo](data/mpv.gif)
 
@@ -12,7 +12,7 @@ Will replace newline with commas for pasted strings.
 By clicking on the highlighted word we can either generate an example or a short story.
 At times, JP tokenizer (kuroshiro) splits phrases incorrectly, maybe should be replaced with someting better.
 
-*NB: This app should be launched locally, otherwise API key will be wisible in the query, which is not good.*
+**NB: This app should be launched locally, otherwise API key will be visible in the query, which is not good.**
 
 ---
 
@@ -24,7 +24,9 @@ Create .env file with your OpenAI API key:
 VITE_APP_API_KEY=your-api-key
 ```
 
-Install and run:
+You'll require node.js and npm.
+
+In project folder, install dependencies and run:
 
 ```sh
 npm i
