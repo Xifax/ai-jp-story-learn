@@ -30,6 +30,7 @@ export default {
       breadcrumbs: [],
       miniStoryOnClick: false,
       highlightKana: false,
+      missingKey: false,
       // TODO: implement list
       lookupsList: [],
       loading: false,
@@ -130,7 +131,9 @@ export default {
   },
   created() {
 
-    console.log(import.meta.env.VITE_APP_API_KEY)
+    if (!import.meta.env.VITE_APP_API_KEY) {
+      this.missingKey = true
+    }
     const configuration = new Configuration({
       apiKey: import.meta.env.VITE_APP_API_KEY
     });
@@ -168,6 +171,18 @@ export default {
 
 <template>
   <div class="greetings">
+
+    <article class="message is-danger" v-if="missingKey">
+      <div class="message-header">
+        <p>STOP</p>
+      </div>
+      <div class="message-body">
+        <p>Couldn't find OpenAI API key in <strong>.env</strong> file, located in project folder.</p>
+        <p>If you don't have one, please create API key at https://beta.openai.com/account</p>
+        <p>Create .env file and set the VITE_APP_API_KEY environment variable like this:</p>
+        <strong>VITE_APP_API_KEY=your-api-key</strong>
+      </div>
+    </article>
 
     <div class="columns box">
 
