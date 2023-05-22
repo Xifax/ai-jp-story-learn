@@ -62,6 +62,9 @@ export default {
       }
       let query = prompt + this.requiredWords
       query = query.replace("...", this.storyType)
+      if (this.storyLength > 150) {
+        this.storyLength = 150
+      }
       query = query.replace("N", this.storyLength)
       console.log("Using prompt: " + query)
 
@@ -160,6 +163,7 @@ export default {
 
     <div class="columns box">
 
+
       <!-- Left side  -->
       <div class="column is-two-thirds">
 
@@ -175,6 +179,7 @@ export default {
         <!-- Filled manually or pre-populated -->
         <label class="label">必要な単語</label>
         <textarea class="textarea" type="text" v-model="requiredWords" rows="2"
+          title="Words that must be in the story"
           placeholder="AIは、その言葉をストーリーの中で使っていきます。" />
         <br>
 
@@ -182,7 +187,8 @@ export default {
 
         <div class="control">
           <div class="select">
-            <select v-model="storyType">
+            <select v-model="storyType"
+                title="Genre of the story">
               <option disabled value="">ジャンルを選択してください</option>
               <option v-for="option in types" :value="option">{{option}}</option>
             </select>
@@ -192,10 +198,13 @@ export default {
         <div class="control" style="width: 20%">
           <input v-model="storyLength"
               class="input" type="number" min="50" max="150"
+              title="Try to limit resulting story length"
               placeholder="Story length">
         </div>
 
-        <button class="button is-danger is-light" @click="newStory">新しい物語</button>
+        <button class="button is-danger is-light"
+            title="Query ChatGPT for a story with the given words"
+            @click="newStory">新しい物語</button>
 
         </div>
 
@@ -207,7 +216,8 @@ export default {
           <div style="max-width: 600px">
             <span v-for="word in words" :key="word">
 
-              <a v-if="isLink(word)" @click="lookup(word)" href="javascript: void(0);">{{ word }}</a>
+              <a v-if="isLink(word)" class="has-text-primary" @click="lookup(word)" 
+                href="#">{{ word }}</a>
               <span v-else>{{ word }}</span>
 
             </span>
@@ -219,7 +229,13 @@ export default {
       <!-- TODO: just append more items to the list -->
       <div class="column">
 
-        <div class="content">
+        <div style="height: 15px;">
+          <progress 
+            v-if="loading"
+            class="progress is-danger is-small" max="100">30%</progress>
+        </div>
+
+        <div class="content ">
           <div style="max-width: 600px">
             <span v-for="word in lookupResults" :key="word">
 
@@ -232,7 +248,7 @@ export default {
 
         <hr v-if="multiLookupResults.length > 0" />
 
-        <div class="content">
+        <div class="content ">
           <div style="max-width: 600px">
             <span v-for="word in multiLookupResults" :key="word">
 
@@ -247,9 +263,9 @@ export default {
 
     </div>
 
-    <div class="box" v-if="loading">
-      <progress class="progress is-danger" max="100">30%</progress>
-    </div>
+    <!-- <div class="box" v-if="loading"> -->
+    <!--   <progress class="progress is-danger is-small" max="100">30%</progress> -->
+    <!-- </div> -->
 
   </div>
 </template>
