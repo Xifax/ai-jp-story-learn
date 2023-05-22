@@ -1,6 +1,6 @@
 # ai-story-learn
 
-![mvp](data/mvp.webm)
+![demo](data/mpv.gif)
 
 Japanese study tool that generates stories with specified words.
 Uses OpenAI API, so the valid key should be provided.
