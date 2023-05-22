@@ -3,11 +3,16 @@
 ![mvp](data/mvp.webm)
 
 Japanese study tool that generates stories with specified words.
+Uses OpenAI API, so the valid key should be provided.
 
 By default, it will get random words from 44k most frequent 
 (4 words from the first 22k and 4 words from the second half).
+Will replace newline with commas for pasted strings.
 
 By clicking on the highlighted word we can either generate an example or a short story.
+At times, JP tokenizer (kuroshiro) splits phrases incorrectly, maybe should be replaced with someting better.
+
+*NB: This app should be launched locally, otherwise API key will be wisible in the query, which is not good.*
 
 ---
 
@@ -55,15 +60,9 @@ npm run dev
 npm run build
 ```
 
-### Lint with [ESLint](https://eslint.org/)
+### ENVS
 
 ```sh
-npm run lint
-```
-
-### Envs
-
-```
 touch .env
 VITE_APP_API_KEY=your-api-key
 ```
