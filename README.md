@@ -1,6 +1,31 @@
 # ai-story-learn
 
-This template should help get you started developing with Vue 3 in Vite.
+Japanese study tool that generates stories with specified words.
+
+By default, it will get random words from 44k most frequent 
+(4 words from the first 22k and 4 words from the second half).
+
+By clicking on the highlighted word we can 
+
+---
+
+## Quick setup
+
+Create .env file with your OpenAI API key:
+
+```sh
+VITE_APP_API_KEY=your-api-key
+```
+
+Install and run:
+
+```sh
+npm i
+
+npm run dev
+```
+
+---
 
 ## Recommended IDE Setup
 

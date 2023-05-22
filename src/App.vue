@@ -4,7 +4,7 @@ import { RouterLink, RouterView } from 'vue-router'
 
 <template>
 
-  <div class="tabs is-centered">
+  <div class="tabs is-centered is-hidden">
     <ul>
       <RouterLink to="/jp">日本語</RouterLink>
       <RouterLink to="/en">EN</RouterLink>

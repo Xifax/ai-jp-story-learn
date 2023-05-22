@@ -8,6 +8,10 @@ let openai;
 const prompt = `簡単なストーリーを作成してください。ストーリージャンルは...であるべきです。
 N単語以内でお願いします。このストーリーには以下の単語を含める必要があります：`
 const examplesPrompt = `という慣用表現を使った例を作成してください。`
+const miniStoryPrompt = `"タイトルに「query」を含む短編小説を想像してください。
+ストーリーを要約し、要約に「query」を使用してください。
+ストーリーのジャンルはgenreである必要があります。
+50単語以内でお願いします。`
 
 import { Configuration, OpenAIApi } from 'openai'
 // import { isKanji, stripOkurigana } from 'wanakana'
@@ -16,14 +20,16 @@ import * as lindera from 'lindera-js'
 export default {
   data() {
     return {
-      // requiredWords: 'hollow, majesty, fanatic, precise, balderdash',
       requiredWords: '',
       story: '',
       storyLength: 50,
       words: [],
+      info: {},
       lookupResults: [],
       multiLookupResults: [],
       breadcrumbs: [],
+      miniStoryOnClick: false,
+      highlightKana: false,
       // TODO: implement list
       lookupsList: [],
       loading: false,
@@ -34,23 +40,28 @@ export default {
   methods: {
     isLink(word) {
       // return isKanji(stripOkurigana(word))
-      return Kuroshiro.Util.hasKanji(word)
-    },
-    checkPaste(event) {
-      // let data = event.clipboardData.getData('text/plain')
-      // console.log(data)
-      // data = data.replaceAll("\n", ", ");
-      // console.log(data)
-      // this.requiredWords = data
+      if (!this.highlightKana) {
+        return Kuroshiro.Util.hasKanji(word)
+      } else {
+        return Kuroshiro.Util.isJapanese(word)
+      }
     },
     async tokenize(text) {
       let words = []
       let tokens = lindera.tokenize(text)
       for (let token of tokens) {
+        this.info[token.surface_form] = token
         words.push(token.surface_form)
       }
       console.log(words)
       return words
+    },
+    // Return formatted info
+    getTokenInfo(surface) {
+      // console.log(this.info[surface])
+      let token = this.info[surface]
+      let info = `${token.pronunciation}, ${token.basic_form}  [${token.pos}: ${token.conjugated_form}]`
+      return info
     },
     async newStory() {
       this.words = []
@@ -78,22 +89,19 @@ export default {
       this.words = await this.tokenize(this.story)
 
       this.loading = false
-
-      /*
-      // TODO: simulate answer
-      this.story = `
-物語の始まりは、宇宙に浮かぶ巨大な宇宙ステーション内部でのことでした。そこでは、様々な研究が行われ、新しい発見が 日々されていました。
-ある日、ステーション内の科学者の一人が、宇宙からの信号を受信しました。信号は人工的なもので、翻訳すると「助けてく れ」という内容でした。
-科学者たちは、その信号の発信元を特定し、宇宙船を発進させることに決めました。宇宙船には、科学者た科学者たちは、その信号の発信元を特定し、宇宙船を発進させることに決めました。
-`
-      this.words = await this.tokenize(this.story)
-      this.loading = false;
-      */
     },
     async getExample(word) {
       this.loading = true
 
-      let query = `「${word}」` + examplesPrompt
+      let query = ""
+      if (this.miniStoryOnClick) {
+        query = miniStoryPrompt
+        query = query.replaceAll("query", word)
+        query = query.replace("genre", this.storyType)
+      } else {
+        query = `「${word}」` + examplesPrompt
+      }
+
       console.log("Using prompt: " + query)
       const completion = await openai.createChatCompletion({
         model: "gpt-3.5-turbo",
@@ -181,7 +189,24 @@ export default {
         <textarea class="textarea" type="text" v-model="requiredWords" rows="2"
           title="Words that must be in the story"
           placeholder="AIは、その言葉をストーリーの中で使っていきます。" />
-        <br>
+
+        <div class="field is-grouped">
+        <p class="control">
+          <label class="checkbox"
+            title="Create mini-story when clicking words, instead of an example">
+            <input type="checkbox" v-model="miniStoryOnClick">
+              Mini story on click
+          </label>
+          </p>
+
+        <p class="control">
+          <label class="checkbox"
+            title="Skip kana-only words, when tokenizing Japanese output">
+            <input type="checkbox" v-model="highlightKana">
+              Highlight kana
+          </label>
+        </p>
+        </div>
 
         <div class="field is-grouped">
 
@@ -202,6 +227,7 @@ export default {
               placeholder="Story length">
         </div>
 
+
         <button class="button is-danger is-light"
             title="Query ChatGPT for a story with the given words"
             @click="newStory">新しい物語</button>
@@ -217,6 +243,7 @@ export default {
             <span v-for="word in words" :key="word">
 
               <a v-if="isLink(word)" class="has-text-primary" @click="lookup(word)" 
+                :title="getTokenInfo(word)"
                 href="#">{{ word }}</a>
               <span v-else>{{ word }}</span>
 
@@ -239,7 +266,7 @@ export default {
           <div style="max-width: 600px">
             <span v-for="word in lookupResults" :key="word">
 
-              <a v-if="isLink(word)" @click="multiLookup(word)" href="javascript: void(0);">{{ word }}</a>
+              <a v-if="isLink(word)" @click="multiLookup(word)" href="#">{{ word }}</a>
               <span v-else>{{ word }}</span>
 
             </span>
@@ -252,7 +279,7 @@ export default {
           <div style="max-width: 600px">
             <span v-for="word in multiLookupResults" :key="word">
 
-              <a v-if="isLink(word)" @click="lookup(word)" href="javascript: void(0);">{{ word }}</a>
+              <a v-if="isLink(word)" @click="lookup(word)" href="#">{{ word }}</a>
               <span v-else>{{ word }}</span>
 
             </span>
