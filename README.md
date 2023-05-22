@@ -1,11 +1,13 @@
 # ai-story-learn
 
+![mvp](data/mvp.webm)
+
 Japanese study tool that generates stories with specified words.
 
 By default, it will get random words from 44k most frequent 
 (4 words from the first 22k and 4 words from the second half).
 
-By clicking on the highlighted word we can 
+By clicking on the highlighted word we can either generate an example or a short story.
 
 ---
 

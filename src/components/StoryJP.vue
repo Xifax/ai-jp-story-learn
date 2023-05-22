@@ -266,7 +266,9 @@ export default {
           <div style="max-width: 600px">
             <span v-for="word in lookupResults" :key="word">
 
-              <a v-if="isLink(word)" @click="multiLookup(word)" href="#">{{ word }}</a>
+              <a v-if="isLink(word)" @click="multiLookup(word)"
+                :title="getTokenInfo(word)"
+                href="#">{{ word }}</a>
               <span v-else>{{ word }}</span>
 
             </span>
@@ -279,7 +281,9 @@ export default {
           <div style="max-width: 600px">
             <span v-for="word in multiLookupResults" :key="word">
 
-              <a v-if="isLink(word)" @click="lookup(word)" href="#">{{ word }}</a>
+              <a v-if="isLink(word)" @click="lookup(word)" 
+                :title="getTokenInfo(word)"
+                href="#">{{ word }}</a>
               <span v-else>{{ word }}</span>
 
             </span>
